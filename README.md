@@ -6,6 +6,7 @@ A collection of PowerShell tools that simplify my life and that may or may not b
 
 * PowerShell
 * Windows
+* Windows Management Instrumentation (WMI)
 * System Center Configuration Manager (SCCM)
 * System Center Virtual Machine Manager (SCVMM)
 
