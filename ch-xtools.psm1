@@ -1,3 +1,8 @@
+function tail { 
+    # Displays the last lines of a textfile and updates in realtime
+    gc -Tail 10 -Wait $args
+}
+
 function Measure-100Commands ($command) {
     # Runs a command 100 times and measures the time it takes to execute it
     1..100 | foreach {Measure-Command -Expression {Invoke-Expression $command}} |
