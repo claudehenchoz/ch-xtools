@@ -26,3 +26,6 @@ function Select-GUI ($input) {
     $a.Add_Shown({$a.Activate()});$g=$a.ShowDialog()
     if($g -eq "OK"){foreach($h in $b.CheckedIndices){$c[$h]}}
 }
+
+# Handy variables
+$cmlogs = "C:\Windows\CCM\Logs"
