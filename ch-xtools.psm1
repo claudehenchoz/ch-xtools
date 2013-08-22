@@ -3,6 +3,10 @@ function tail {
     gc -Tail 10 -Wait $args
 }
 
+function Find-StringInFiles { 
+    Get-ChildItem -recurse | Select-String -Pattern "$args" | Group Path | Select Name
+}
+
 function Measure-100Commands ($command) {
     # Runs a command 100 times and measures the time it takes to execute it
     1..100 | foreach {Measure-Command -Expression {Invoke-Expression $command}} |
