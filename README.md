@@ -8,10 +8,6 @@ A collection of PowerShell tools that simplify my life and that may or may not b
 
     iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/claudehenchoz/ch-xtools/master/install-ch-xtools.ps1'))
 
-### From a Command Prompt
-
-    @powershell -NoProfile -ExecutionPolicy unrestricted -Command "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/claudehenchoz/ch-xtools/master/install-ch-xtools.ps1'))"
-
 ### Topics
 
 * PowerShell
