@@ -1,6 +1,34 @@
+function Get-EnterpriseModeDetails {
+    # Gets details on IE Enterprise Mode configuration (on IE11+)
+    Param([switch]$ClearCache)
+    $Reg = "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main\EnterpriseMode"
+    $SiteListURL = Get-ItemProperty $Reg -Name SiteList | `
+                       Select-Object -ExpandProperty SiteList
+
+    [xml]$XmlDoc = (New-Object System.Net.WebClient).DownloadString($SiteListURL)
+    $SiteListVersion = $XmlDoc.DocumentElement.GetAttribute("version")
+
+    $RegHKCU = "HKCU:\Software\Microsoft\Internet Explorer\Main\EnterpriseMode"
+    $LocalVersion = Get-ItemProperty $RegHKCU -Name CurrentVersion | `
+                        Select-Object -ExpandProperty CurrentVersion
+
+    "Enterprise Mode Details`n-----------------------`n"
+    "Site List`n---------"
+    "`tURL (HKLM Policy):`n`t`t$SiteListURL`n"
+    "`tVersion:`n`t`t$SiteListVersion`n"
+    "Local`n---------"
+    "`tSite List Version (HKCU):`n`t`t$LocalVersion`n"
+    "`tCache Folder:`n`t`t$([Environment]::GetFolderPath("InternetCache"))`n"
+
+    if ($ClearCache) {
+        RunDll32.exe InetCpl.cpl, ClearMyTracksByProcess 255
+        explorer.exe $([Environment]::GetFolderPath("InternetCache"))
+    }
+}
+
 function Format-FileSize {
     # Used by Get-FolderSizes to return a human-readable size representation
-    Param ([long]$Size)
+    Param([long]$Size)
     If     ($Size -gt 1TB) {[string]::Format("{0:0.0} TB", $Size / 1TB)}
     ElseIf ($Size -gt 1GB) {[string]::Format("{0:0.0} GB", $Size / 1GB)}
     ElseIf ($Size -gt 1MB) {[string]::Format("{0:0.0} MB", $Size / 1MB)}
