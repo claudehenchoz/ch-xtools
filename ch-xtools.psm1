@@ -1,3 +1,39 @@
+function Format-FileSize {
+    # Used by Get-FolderSizes to return a human-readable size representation
+    Param ([long]$Size)
+    If     ($Size -gt 1TB) {[string]::Format("{0:0.0} TB", $Size / 1TB)}
+    ElseIf ($Size -gt 1GB) {[string]::Format("{0:0.0} GB", $Size / 1GB)}
+    ElseIf ($Size -gt 1MB) {[string]::Format("{0:0.0} MB", $Size / 1MB)}
+    ElseIf ($Size -gt 1KB) {[string]::Format("{0:0.0} kB", $Size / 1KB)}
+    ElseIf ($Size -gt 0)   {[string]::Format("{0:0.0} B", $Size)}
+    Else                   {""}
+}
+
+function Get-ChildItemsWithoutSymlinks {
+    # Used by Get-FolderSizes to retrieve recursive items without symlinks
+    Param([Parameter(Mandatory=$true,Position=0)][string]$Path)
+    Get-ChildItem -Directory -Force -Path $Path `
+        -Attributes !ReparsePoint `
+        -ErrorAction SilentlyContinue | % {
+        Get-ChildItemsWithoutSymlinks $_.Fullname
+    }
+    Get-ChildItem -File -Force $Path -ErrorAction SilentlyContinue
+}
+
+function Get-FolderSizes {
+    # Gets subfolders of $Path and displays their total size
+    Param([Parameter(Mandatory=$true,Position=0)][string]$Path)
+    Get-ChildItem -Directory -Force -Path $Path | % {
+        Get-ChildItemsWithoutSymlinks $_.Fullname | `
+            Measure-Object -Property Length -Sum | `
+                Add-Member -MemberType NoteProperty -Name Folder `
+                -Value $_.Fullname -PassThru | `
+                Select-Object -Property Folder, `
+                    @{Name="Bytes"; Expression={$_.Sum}}, `
+                    @{Name="Size";Expression={Format-FileSize($_.Sum)}}
+    }
+}
+
 function tail { 
     # Displays the last lines of a textfile and updates in realtime
     gc -Tail 10 -Wait $args
@@ -31,5 +67,5 @@ function Select-GUI ($input) {
     if($g -eq "OK"){foreach($h in $b.CheckedIndices){$c[$h]}}
 }
 
-# Handy variables
-$cmlogs = "C:\Windows\CCM\Logs"
+
+Export-ModuleMember -Function Get-FolderSizes, Find-StringInFiles, Measure-100Commands, Select-GUI
