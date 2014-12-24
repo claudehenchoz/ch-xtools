@@ -101,5 +101,5 @@ function Select-GUI ($input) {
     if($g -eq "OK"){foreach($h in $b.CheckedIndices){$c[$h]}}
 }
 
-
-Export-ModuleMember -Function Get-FolderSizes, Find-StringInFiles, Measure-100Commands, Select-GUI
+Export-ModuleMember -Function Update-chxtools, Get-EnterpriseModeDetails, `
+    Get-FolderSizes, Find-StringInFiles, Measure-100Commands, Select-GUI
