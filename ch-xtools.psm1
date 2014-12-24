@@ -1,3 +1,9 @@
+$ScriptURL = "https://raw.githubusercontent.com/claudehenchoz/ch-xtools/master/install-ch-xtools.ps1"
+
+function Update-chxtools {
+    iex ((new-object net.webclient).DownloadString($ScriptURL))
+}
+
 function Get-EnterpriseModeDetails {
     # Gets details on IE Enterprise Mode configuration (on IE11+)
     Param([switch]$ClearCache)
