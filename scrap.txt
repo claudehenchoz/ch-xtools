@@ -1,1 +1,0 @@
-(Get-WmiObject -Namespace root\SMS\site_SH0 -Query "SELECT * FROM SMS_DeploymentType" | Select LocalizedDisplayName, Technology) + (Get-WmiObject -Namespace root\SMS\site_SH0 -Query "SELECT * FROM SMS_Package" | Add-Member NoteProperty Technology Package -passThru | Select-Object @{Name='LocalizedDisplayName'; Expression={$_.Name}}, Technology)
