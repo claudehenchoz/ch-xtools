@@ -4,11 +4,11 @@ A collection of PowerShell tools that simplify my life and that may or may not b
 
 ## Installation
 
-### From a PowerShell Prompt
+In order to install the module, open a PowerShell prompt and paste the following line (triple-click to select all of it), then press [ENTER].
 
     iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/claudehenchoz/ch-xtools/master/install-ch-xtools.ps1'))
 
-### Topics
+## Topics
 
 * PowerShell
 * Windows
