@@ -1,6 +1,20 @@
+# URL to .psm1 file
 $url = "https://raw.githubusercontent.com/claudehenchoz/ch-xtools/master/ch-xtools.psm1"
-$chxtoolspath = [environment]::getfolderpath("mydocuments") + "\WindowsPowerShell\Modules\ch-xtools"
-if (!(Test-Path $chxtoolspath)) { New-Item -itemtype "Directory" $chxtoolspath -force | Out-Null }
-Invoke-WebRequest $url -OutFile "$chxtoolspath\ch-xtools.psm1" 
-Import-Module "$chxtoolspath\ch-xtools.psm1"
-Write-Output "Done. Run `"Get-Command -Module ch-xtools`" to get a list of tools."
+
+# File name of URL without extension
+$modname = (([System.Uri]"$url").Segments[-1]).Split(".")[0]
+
+# Create local module path
+$modpath = [environment]::getfolderpath("mydocuments") + "\WindowsPowerShell\Modules\$modname"
+
+# Create module folder(s) if it doesn't exist
+if (!(Test-Path $modpath)) {
+    New-Item -itemtype "Directory" $modpath -force | Out-Null
+}
+
+# Download module
+Invoke-WebRequest $url -OutFile "$modpath\$modname.psm1"
+
+# Import so it becomes immediately loaded
+Import-Module "$modpath\$modname.psm1"
+Write-Output "Done. Run `"Get-Command -Module $modname`" to get a list of tools."
