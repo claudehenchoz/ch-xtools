@@ -4,6 +4,8 @@ function Update-chxtools {
     iex ((new-object net.webclient).DownloadString($ScriptURL))
 }
 
+Export-ModuleMember -Function Update-chxtools
+
 function Get-EnterpriseModeDetails {
     # Gets details on IE Enterprise Mode configuration (on IE11+)
     Param([switch]$ClearCache)
@@ -31,6 +33,9 @@ function Get-EnterpriseModeDetails {
         explorer.exe $([Environment]::GetFolderPath("InternetCache"))
     }
 }
+
+Set-Alias gemd Get-EnterpriseModeDetails
+Export-ModuleMember -Function Get-EnterpriseModeDetails -Alias gemd
 
 function Format-FileSize {
     # Used by Get-FolderSizes to return a human-readable size representation
@@ -68,6 +73,9 @@ function Get-FolderSizes {
     }
 }
 
+Set-Alias gfs Get-FolderSizes
+Export-ModuleMember -Function Get-FolderSizes -Alias gfs
+
 function tail { 
     # Displays the last lines of a textfile and updates in realtime
     gc -Tail 10 -Wait $args
@@ -77,11 +85,16 @@ function Find-StringInFiles {
     Get-ChildItem -recurse | Select-String -Pattern "$args" | Group Path | Select Name
 }
 
+Export-ModuleMember -Function Find-StringInFiles
+
 function Measure-100Commands ($command) {
     # Runs a command 100 times and measures the time it takes to execute it
     1..100 | foreach {Measure-Command -Expression {Invoke-Expression $command}} |
              Measure-Object -Property TotalMilliseconds -Average
 }
+
+Set-Alias m100 Measure-100Commands
+Export-ModuleMember -Function Measure-100Commands -Alias m100
 
 function Select-GUI ($input) {
     # Presents a selection table with checkboxes
@@ -101,6 +114,4 @@ function Select-GUI ($input) {
     if($g -eq "OK"){foreach($h in $b.CheckedIndices){$c[$h]}}
 }
 
-Export-ModuleMember -Function Update-chxtools, Get-EnterpriseModeDetails
-Export-ModuleMember -Function Get-FolderSizes, Find-StringInFiles
-Export-ModuleMember -Function Measure-100Commands, Select-GUI
+Export-ModuleMember -Function Select-GUI
