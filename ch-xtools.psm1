@@ -10,15 +10,22 @@ function Get-EnterpriseModeDetails {
     # Gets details on IE Enterprise Mode configuration (on IE11+)
     Param([switch]$ClearCache)
     $Reg = "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main\EnterpriseMode"
-    $SiteListURL = Get-ItemProperty $Reg -Name SiteList | `
-                       Select-Object -ExpandProperty SiteList
-
-    [xml]$XmlDoc = (New-Object System.Net.WebClient).DownloadString($SiteListURL)
-    $SiteListVersion = $XmlDoc.DocumentElement.GetAttribute("version")
-
+    if ((Test-Path $Reg)) {
+        $SiteListURL = Get-ItemProperty $Reg -Name SiteList | `
+                           Select-Object -ExpandProperty SiteList
+        [xml]$XmlDoc = (New-Object System.Net.WebClient).DownloadString($SiteListURL)
+        $SiteListVersion = $XmlDoc.DocumentElement.GetAttribute("version")
+    } else {
+        $SiteListURL = "n/a"
+        $SiteListVersion = "n/a"
+    }
     $RegHKCU = "HKCU:\Software\Microsoft\Internet Explorer\Main\EnterpriseMode"
-    $LocalVersion = Get-ItemProperty $RegHKCU -Name CurrentVersion | `
-                        Select-Object -ExpandProperty CurrentVersion
+    if ((Test-Path $RegHKCU)) {
+        $LocalVersion = Get-ItemProperty $RegHKCU -Name CurrentVersion | `
+                            Select-Object -ExpandProperty CurrentVersion
+    } else {
+        $LocalVersion = "n/a"
+    }
 
     "Enterprise Mode Details`n-----------------------`n"
     "Site List`n---------"
