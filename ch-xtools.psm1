@@ -23,8 +23,8 @@ function Get-EnterpriseModeDetails {
     "Enterprise Mode Details`n-----------------------`n"
     "Site List`n---------"
     "`tURL (HKLM Policy):`n`t`t$SiteListURL`n"
-    "`tVersion:`n`t`t$SiteListVersion`n"
-    "Local`n---------"
+    "`tVersion (Web):`n`t`t$SiteListVersion`n"
+    "Local`n-----"
     "`tSite List Version (HKCU):`n`t`t$LocalVersion`n"
     "`tCache Folder:`n`t`t$([Environment]::GetFolderPath("InternetCache"))`n"
 
