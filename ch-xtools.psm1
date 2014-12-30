@@ -8,7 +8,7 @@ Export-ModuleMember -Function Update-chxtools
 
 function Get-EnterpriseModeDetails {
     # Gets details on IE Enterprise Mode configuration (on IE11+)
-    Param([switch]$ClearCache)
+    Param([switch]$ClearCache,[switch]$OpenCacheFolder)
     $Reg = "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main\EnterpriseMode"
     if ((Test-Path $Reg)) {
         $SiteListURL = Get-ItemProperty $Reg -Name SiteList | `
@@ -37,6 +37,10 @@ function Get-EnterpriseModeDetails {
 
     if ($ClearCache) {
         RunDll32.exe InetCpl.cpl, ClearMyTracksByProcess 255
+        explorer.exe $([Environment]::GetFolderPath("InternetCache"))
+    }
+
+    if ($OpenCacheFolder) {
         explorer.exe $([Environment]::GetFolderPath("InternetCache"))
     }
 }
