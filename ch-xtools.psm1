@@ -8,28 +8,39 @@ Export-ModuleMember -Function Update-chxtools
 
 function Get-EnterpriseModeDetails {
     # Gets details on IE Enterprise Mode configuration (on IE11+)
-    Param([switch]$ClearCache)
+    Param([switch]$ClearCache,[switch]$OpenCacheFolder)
     $Reg = "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main\EnterpriseMode"
-    $SiteListURL = Get-ItemProperty $Reg -Name SiteList | `
-                       Select-Object -ExpandProperty SiteList
-
-    [xml]$XmlDoc = (New-Object System.Net.WebClient).DownloadString($SiteListURL)
-    $SiteListVersion = $XmlDoc.DocumentElement.GetAttribute("version")
-
+    if ((Test-Path $Reg)) {
+        $SiteListURL = Get-ItemProperty $Reg -Name SiteList | `
+                           Select-Object -ExpandProperty SiteList
+        [xml]$XmlDoc = (New-Object System.Net.WebClient).DownloadString($SiteListURL)
+        $SiteListVersion = $XmlDoc.DocumentElement.GetAttribute("version")
+    } else {
+        $SiteListURL = "n/a"
+        $SiteListVersion = "n/a"
+    }
     $RegHKCU = "HKCU:\Software\Microsoft\Internet Explorer\Main\EnterpriseMode"
-    $LocalVersion = Get-ItemProperty $RegHKCU -Name CurrentVersion | `
-                        Select-Object -ExpandProperty CurrentVersion
+    if ((Test-Path $RegHKCU)) {
+        $LocalVersion = Get-ItemProperty $RegHKCU -Name CurrentVersion | `
+                            Select-Object -ExpandProperty CurrentVersion
+    } else {
+        $LocalVersion = "n/a"
+    }
 
     "Enterprise Mode Details`n-----------------------`n"
     "Site List`n---------"
     "`tURL (HKLM Policy):`n`t`t$SiteListURL`n"
-    "`tVersion:`n`t`t$SiteListVersion`n"
-    "Local`n---------"
+    "`tVersion (Web):`n`t`t$SiteListVersion`n"
+    "Local`n-----"
     "`tSite List Version (HKCU):`n`t`t$LocalVersion`n"
     "`tCache Folder:`n`t`t$([Environment]::GetFolderPath("InternetCache"))`n"
 
     if ($ClearCache) {
         RunDll32.exe InetCpl.cpl, ClearMyTracksByProcess 255
+        explorer.exe $([Environment]::GetFolderPath("InternetCache"))
+    }
+
+    if ($OpenCacheFolder) {
         explorer.exe $([Environment]::GetFolderPath("InternetCache"))
     }
 }
