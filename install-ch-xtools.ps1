@@ -20,7 +20,7 @@ function Install-ModuleFromUri {
     Invoke-WebRequest $Uri -OutFile "$modpath\$modname.psm1"
 
     # Import so it becomes immediately loaded
-    Import-Module "$modpath\$modname.psm1"
+    Import-Module "$modpath\$modname.psm1" -Force
     Write-Output "Done installing $modname!`n"
     Write-Output "Installed from: $Uri"
     Write-Output "Installed to:   $modpath`n"
