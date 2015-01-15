@@ -6,12 +6,119 @@ function Update-chxtools {
 
 Export-ModuleMember -Function Update-chxtools
 
+$EmReg = "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main\EnterpriseMode"
+$EmRegHKCU = "HKCU:\Software\Microsoft\Internet Explorer\Main\EnterpriseMode"
+
+function Get-EnterpriseModeSiteList {
+    # Gets a human-readable representation of the Enterprise Mode site list
+    Param([Parameter(Mandatory=$false,Position=0)][string]$Url)
+
+    function NoTrailingSlashToAsterisk {
+        Param([Parameter(Mandatory=$true,Position=0)][string]$Part)
+        if ($Path."#text"[-1] -eq "/") {
+            $Part
+        } else {
+            $Part+"*"
+        }
+    }
+
+    if (!$Url) {
+        if ((Test-Path $EmReg)) {
+            $Url = Get-ItemProperty $EmReg -Name SiteList | `
+                               Select-Object -ExpandProperty SiteList
+        } else {
+            "No Url specified and none configured in $EmReg"
+            break
+        }
+    }
+    [xml]$XmlDoc = (New-Object System.Net.WebClient).DownloadString($Url)
+    if ($XmlDoc) {
+        # emie section
+        $Domains = $XmlDoc.documentElement.emie.getElementsByTagName("domain")
+        foreach ($Domain in $Domains) {
+            if ($Domain.hasAttribute("exclude")) {
+                if ($Domain.getAttribute("exclude") -eq "false") {
+                    [PSCustomObject]@{
+                        Address = $Domain."#text" + "*"
+                        Setting = "Enterprise Mode"
+                    }
+                } else {
+                    [PSCustomObject]@{
+                        Address = $Domain."#text" + "*"
+                        Setting = "Default"
+                    }
+                }
+            } else {
+                [PSCustomObject]@{
+                    Address = $Domain."#text" + "*"
+                    Setting = "N/A (broken configuration)"
+                }
+            }
+            $Paths = $Domain.getElementsByTagName("path")
+            foreach ($Path in $Paths) {
+                $FullAddress = $Domain."#text" + $Path."#text"
+                if ($Path.hasAttribute("exclude")) {
+                    if ($Path.getAttribute("exclude") -eq "false") {
+                        [PSCustomObject]@{
+                            Address = NoTrailingSlashToAsterisk($FullAddress)
+                            Setting = "Enterprise Mode"
+                        }
+                    } else {
+                        [PSCustomObject]@{
+                            Address = NoTrailingSlashToAsterisk($FullAddress)
+                            Setting = "Default"
+                        }
+                    }
+                } else {
+                    [PSCustomObject]@{
+                        Address = NoTrailingSlashToAsterisk($FullAddress)
+                        Setting = "N/A (broken configuration)"
+                    }
+                }
+            }
+        }
+        # docMode section
+        $Domains = $XmlDoc.documentElement.docMode.getElementsByTagName("domain")
+        foreach ($Domain in $Domains) {
+            if ($Domain.hasAttribute("docMode")) {
+                [PSCustomObject]@{
+                    Address = $Domain."#text" + "*"
+                    Setting = $Domain.getAttribute("docMode")
+                }
+            } else {
+                [PSCustomObject]@{
+                    Address = $Domain."#text" + "*"
+                    Setting = "No docMode"
+                }
+            }
+
+            $Paths = $Domain.getElementsByTagName("path")
+            foreach ($Path in $Paths) {
+                $FullAddress = $Domain."#text" + $Path."#text"
+                if ($Path.hasAttribute("docMode")) {
+                    [PSCustomObject]@{
+                        Address = NoTrailingSlashToAsterisk($FullAddress)
+                        Setting = $Path.getAttribute("docMode")
+                    }
+                } else {
+                    [PSCustomObject]@{
+                        Address = NoTrailingSlashToAsterisk($FullAddress)
+                        Setting = "No docMode"
+                    }
+                }
+            }
+        }
+    }
+}
+
+Set-Alias gemsl Get-EnterpriseModeSiteList
+Export-ModuleMember -Function Get-EnterpriseModeSiteList -Alias gemsl
+
 function Get-EnterpriseModeDetails {
     # Gets details on IE Enterprise Mode configuration (on IE11+)
     Param([switch]$ClearCache,[switch]$OpenCacheFolder)
-    $Reg = "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main\EnterpriseMode"
-    if ((Test-Path $Reg)) {
-        $SiteListURL = Get-ItemProperty $Reg -Name SiteList | `
+    if ((Test-Path $EmReg)) {
+        $SiteListURL = Get-ItemProperty $EmReg -Name SiteList | `
                            Select-Object -ExpandProperty SiteList
         [xml]$XmlDoc = (New-Object System.Net.WebClient).DownloadString($SiteListURL)
         $SiteListVersion = $XmlDoc.DocumentElement.GetAttribute("version")
@@ -19,9 +126,8 @@ function Get-EnterpriseModeDetails {
         $SiteListURL = "n/a"
         $SiteListVersion = "n/a"
     }
-    $RegHKCU = "HKCU:\Software\Microsoft\Internet Explorer\Main\EnterpriseMode"
-    if ((Test-Path $RegHKCU)) {
-        $LocalVersion = Get-ItemProperty $RegHKCU -Name CurrentVersion | `
+    if ((Test-Path $EmRegHKCU)) {
+        $LocalVersion = Get-ItemProperty $EmRegHKCU -Name CurrentVersion | `
                             Select-Object -ExpandProperty CurrentVersion
     } else {
         $LocalVersion = "n/a"
