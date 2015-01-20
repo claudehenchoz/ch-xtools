@@ -232,3 +232,20 @@ function Select-GUI ($input) {
 }
 
 Export-ModuleMember -Function Select-GUI
+
+function Confirm-MatchThresholdMet {
+    # Returns true if a file has more than a specified percentage of matching lines
+    # This can be used to detect a problem in a log file
+    Param([Parameter(Mandatory=$true,Position=0)][string]$Path,
+          [Parameter(Mandatory=$true,Position=1)][string]$Pattern,
+          [Parameter(Position=2)][int]$MinPercent=20,
+          [Parameter(Position=3)][int]$LastLines)
+    if ($LastLines) { $Lines = Get-Content $Path -Tail $LastLines }
+    else { $Lines = Get-Content $Path }
+    $MatchLines = $Lines | Select-String -Pattern $Pattern
+    $ActualPercent = 100 / $Lines.Count * $MatchLines.Count
+    if ($ActualPercent -ge $MinPercent) { $true } else { $false }
+}
+
+Set-Alias cmtm Confirm-MatchThresholdMet
+Export-ModuleMember -Function Confirm-MatchThresholdMet -Alias cmtm
