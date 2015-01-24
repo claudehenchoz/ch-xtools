@@ -209,7 +209,8 @@ function Convert-CSVToEnterpriseModeSiteList {
     $XmlDoc.InnerXml
 }
 
-Export-ModuleMember -Function Convert-CSVToEnterpriseModeSiteList
+Set-Alias csv2em Convert-CSVToEnterpriseModeSiteList
+Export-ModuleMember -Function Convert-CSVToEnterpriseModeSiteList -Alias csv2em
 
 function Get-EnterpriseModeDetails {
     # Gets details on IE Enterprise Mode configuration (on IE11+)
