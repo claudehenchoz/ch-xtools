@@ -10,6 +10,68 @@ In order to install the module, open a PowerShell prompt and paste the following
 
 ## Features
 
+### Convert-CSVToEnterpriseModeSiteList (csv2em)
+
+Converts a CSV file with a list of URLs and configuration options (and optionally, comments) to an [Enterprise Mode](http://msdn.microsoft.com/en-us/library/dn640687.aspx) XML file. It optionally generates an .emie file when launched with the -EmieFile parameter.
+
+In the following example, we are using this example.csv:
+
+```csv
+Url,Mode,Comment
+"http://acme.com",emie,"ACME(tm)"
+"http://my.acme.com",docMode7,"ACME Account Page"
+"http://netscape.com/ms-ie",docModeedge,""
+"http://microsoft.com",emie,""
+"http://microsoft.com/hello",emie,"MS Hello Site"
+"http://microsoft.com/ie",docMode5,""
+```
+
+Running `Convert-CSVToEnterpriseModeSiteList .\example.csv` will produce the following XML (version attribute is randomized) that can be used by Internet Explorer directly:
+
+```xml
+<rules version="93635">
+    <emie>
+        <domain exclude="false">acme.com</domain>
+        <domain exclude="false">microsoft.com
+            <path exclude="false">/hello</path>
+        </domain>
+    </emie>
+    <docMode>
+        <domain>microsoft.com
+            <path docMode="5">/ie</path>
+        </domain>
+        <domain docMode="7">my.acme.com</domain>
+        <domain>netscape.com
+            <path docMode="edge">/ms-ie</path>
+        </domain>
+    </docMode>
+</rules>
+```
+
+In order to produce XML that can be imported into the "Enterprise Mode Site List Manager" (an .emie file that also contains comments that may be specified in the CSV), use the -EmieFile parameter.
+
+Running `Convert-CSVToEnterpriseModeSiteList .\example.csv -EmieFile` produces this .emie file to be loaded in the "Enterprise Mode Site List Manager" tool (note the comments as well as the missing rules-attribute when outputting to .emie):
+
+```xml
+<rules>
+    <emie>
+        <domain exclude="false" comment="ACME(tm)">acme.com</domain>
+        <domain exclude="false">microsoft.com
+            <path exclude="false" comment="MS Hello Site">/hello</path>
+        </domain>
+    </emie>
+    <docMode>
+        <domain>microsoft.com
+            <path docMode="5">/ie</path>
+        </domain>
+        <domain docMode="7" comment="ACME Account Page">my.acme.com</domain>
+        <domain>netscape.com
+            <path docMode="edge">/ms-ie</path>
+        </domain>
+    </docMode>
+</rules>
+```
+
 ### Get-EnterpriseModeDetails (gemd)
 
 Gets details on Internet Explorer [Enterprise Mode](http://msdn.microsoft.com/en-us/library/dn640687.aspx) configuration. This is primarily intended to display the currently active configuration as well as the active versions.
