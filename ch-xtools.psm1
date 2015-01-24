@@ -114,6 +114,104 @@ function Get-EnterpriseModeSiteList {
 Set-Alias gemsl Get-EnterpriseModeSiteList
 Export-ModuleMember -Function Get-EnterpriseModeSiteList -Alias gemsl
 
+function Convert-CSVToEnterpriseModeSiteList {
+    Param([Parameter(Mandatory=$true,Position=0)][string]$CSVPath,
+          [Parameter(Position=1)][switch]$EmieFile)
+    # The sort by URL in this line ensures domains are always before URLs with path
+    $CSVData = Import-Csv $CSVPath | Sort-Object -Property Url
+    [xml]$XmlDoc = "<rules />"
+    $Rules = $XmlDoc.DocumentElement
+    if (!$EmieFile) {
+        $RandomVersion = Get-Random -Minimum 10000 -maximum 99999
+        $Rules.SetAttribute("version","$RandomVersion")
+    }
+    $Emie = $XmlDoc.CreateElement("","emie","")
+    $Rules.AppendChild($Emie) | Out-Null
+    $DocMode = $XmlDoc.CreateElement("","docMode","")
+    $Rules.AppendChild($DocMode) | Out-Null
+    foreach ($Configuration in $CSVData) {
+        $ConfigUri = [System.Uri]$Configuration.Url
+        $Authority = $ConfigUri.Authority
+        $PathAndQuery = $ConfigUri.PathAndQuery
+        if ($Configuration.Mode -eq "emie") {
+            $Domain = $Emie.SelectNodes(".//domain[text()='$Authority']")
+            if ($Domain.count -gt 0) {
+                # Domain exists already
+            } else {
+                # Domain doesn't exist
+                $Domain = $XmlDoc.CreateElement("domain")
+                $Text = $XmlDoc.CreateTextNode($Authority)
+                $Domain.AppendChild($Text) | Out-Null
+                $Emie.AppendChild($Domain) | Out-Null
+                if ($ConfigUri.Segments.Count -gt 1) {
+                    # We set the domain to exclude as it wasn't 
+                    # explicitly specified
+                    $Domain.SetAttribute("exclude","true")
+                    if ($EmieFile -and $Configuration.Comment) {
+                        $Domain.SetAttribute("comment",$Configuration.Comment)
+                    }
+                } else {
+                    # We enable emie as the URL contains only a domain
+                    $Domain.SetAttribute("exclude","false")
+                    if ($EmieFile -and $Configuration.Comment) {
+                        $Domain.SetAttribute("comment",$Configuration.Comment)
+                    }
+                }
+            }
+            if ($ConfigUri.Segments.Count -gt 1) {
+                $Path = $XmlDoc.CreateElement("path")
+                $Path.SetAttribute("exclude","false")
+                if ($EmieFile -and $Configuration.Comment) {
+                    $Path.SetAttribute("comment",$Configuration.Comment)
+                }
+                $Text = $XmlDoc.CreateTextNode($PathAndQuery)
+                $Path.AppendChild($Text) | Out-Null
+                $Domain.AppendChild($Path) | Out-Null
+            }
+        }
+        elseif ($Configuration.Mode.Substring(0,7) -eq "docMode") {
+            $DocLevel = $Configuration.Mode.Substring(7)
+            $Domain = $DocMode.SelectNodes(".//domain[text()='$Authority']")
+            if ($Domain.count -gt 0) {
+                # Domain exists already
+            } else {
+                # Domain doesn't exist
+                $Domain = $XmlDoc.CreateElement("domain")
+                $Text = $XmlDoc.CreateTextNode($Authority)
+                $Domain.AppendChild($Text) | Out-Null
+                $DocMode.AppendChild($Domain) | Out-Null
+                if ($ConfigUri.Segments.Count -gt 1) {
+                    # We don't configure the domain as it wasn't 
+                    # explicitly specified
+                    if ($EmieFile -and $Configuration.Comment) {
+                        $Domain.SetAttribute("comment",$Configuration.Comment)
+                    }
+                } else {
+                    # We configure the domain as the URL contains only a domain
+                    $Domain.SetAttribute("docMode",$DocLevel)
+                    if ($EmieFile -and $Configuration.Comment) {
+                        $Domain.SetAttribute("comment",$Configuration.Comment)
+                    }
+                }
+            }
+            if ($ConfigUri.Segments.Count -gt 1) {
+                $Path = $XmlDoc.CreateElement("path")
+                $Path.SetAttribute("docMode",$DocLevel)
+                if ($EmieFile -and $Configuration.Comment) {
+                    $Path.SetAttribute("comment",$Configuration.Comment)
+                }
+                $Text = $XmlDoc.CreateTextNode($PathAndQuery)
+                $Path.AppendChild($Text) | Out-Null
+                $Domain.AppendChild($Path) | Out-Null
+            }
+        }
+    }
+    $XmlDoc.InnerXml
+}
+
+Set-Alias csv2em Convert-CSVToEnterpriseModeSiteList
+Export-ModuleMember -Function Convert-CSVToEnterpriseModeSiteList -Alias csv2em
+
 function Get-EnterpriseModeDetails {
     # Gets details on IE Enterprise Mode configuration (on IE11+)
     Param([switch]$ClearCache,[switch]$OpenCacheFolder)
