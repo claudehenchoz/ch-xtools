@@ -145,41 +145,62 @@ function Convert-CSVToEnterpriseModeSiteList {
         $ConfigUri = [System.Uri]$Configuration.Url
         $Authority = $ConfigUri.Authority
         $PathAndQuery = $ConfigUri.PathAndQuery
-
-        switch ($Configuration.Mode) {
-            "emie" {
-                $Domain = $Emie.SelectNodes(".//domain[text()='$Authority']")
-                if ($Domain.count -gt 0) {
-                    # Domain exists already
-                } else {
-                    # Domain doesn't exist
-                    $Domain = $XmlDoc.CreateElement("domain")
-                    $Text = $XmlDoc.CreateTextNode($Authority)
-                    $Domain.AppendChild($Text) | Out-Null
-                    $Emie.AppendChild($Domain) | Out-Null
-                    if ($ConfigUri.Segments.Count -gt 1) {
-                        # We set the domain to exclude as it wasn't 
-                        # explicitly specified
-                        $Domain.SetAttribute("exclude","true")
-                    } else {
-                        # We enable emie as the URL contains only a domain
-                        $Domain.SetAttribute("exclude","false")
-                    }
-                }
+        if ($Configuration.Mode -eq "emie") {
+            $Domain = $Emie.SelectNodes(".//domain[text()='$Authority']")
+            if ($Domain.count -gt 0) {
+                # Domain exists already
+            } else {
+                # Domain doesn't exist
+                $Domain = $XmlDoc.CreateElement("domain")
+                $Text = $XmlDoc.CreateTextNode($Authority)
+                $Domain.AppendChild($Text) | Out-Null
+                $Emie.AppendChild($Domain) | Out-Null
                 if ($ConfigUri.Segments.Count -gt 1) {
-                    $Path = $XmlDoc.CreateElement("path")
-                    $Path.SetAttribute("exclude","false")
-                    $Text = $XmlDoc.CreateTextNode($PathAndQuery)
-                    $Path.AppendChild($Text) | Out-Null
-                    $Domain.AppendChild($Path) | Out-Null
+                    # We set the domain to exclude as it wasn't 
+                    # explicitly specified
+                    $Domain.SetAttribute("exclude","true")
+                } else {
+                    # We enable emie as the URL contains only a domain
+                    $Domain.SetAttribute("exclude","false")
                 }
             }
-            "docMode7" {
-
+            if ($ConfigUri.Segments.Count -gt 1) {
+                $Path = $XmlDoc.CreateElement("path")
+                $Path.SetAttribute("exclude","false")
+                $Text = $XmlDoc.CreateTextNode($PathAndQuery)
+                $Path.AppendChild($Text) | Out-Null
+                $Domain.AppendChild($Path) | Out-Null
+            }
+        }
+        elseif ($Configuration.Mode.Substring(0,7) -eq "docMode") {
+            $DocLevel = $Configuration.Mode.Substring(7)
+            $Domain = $DocMode.SelectNodes(".//domain[text()='$Authority']")
+            if ($Domain.count -gt 0) {
+                # Domain exists already
+            } else {
+                # Domain doesn't exist
+                $Domain = $XmlDoc.CreateElement("domain")
+                $Text = $XmlDoc.CreateTextNode($Authority)
+                $Domain.AppendChild($Text) | Out-Null
+                $DocMode.AppendChild($Domain) | Out-Null
+                if ($ConfigUri.Segments.Count -gt 1) {
+                    # We don't configure the domain as it wasn't 
+                    # explicitly specified
+                } else {
+                    # We configure the domain as the URL contains only a domain
+                    $Domain.SetAttribute("docMode",$DocLevel)
+                }
+            }
+            if ($ConfigUri.Segments.Count -gt 1) {
+                $Path = $XmlDoc.CreateElement("path")
+                $Path.SetAttribute("docMode",$DocLevel)
+                $Text = $XmlDoc.CreateTextNode($PathAndQuery)
+                $Path.AppendChild($Text) | Out-Null
+                $Domain.AppendChild($Path) | Out-Null
             }
         }
     }
-    write-host $XmlDoc.InnerXml
+    $XmlDoc.InnerXml
 }
 
 Export-ModuleMember -Function Convert-CSVToEnterpriseModeSiteList
