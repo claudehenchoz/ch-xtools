@@ -136,6 +136,10 @@ function Convert-CSVToEnterpriseModeSiteList {
     $CSVData = Import-Csv $CSVPath | Sort-Object -Property Url
     [xml]$XmlDoc = "<rules />"
     $Rules = $XmlDoc.DocumentElement
+    if (!$EmieFile) {
+        $RandomVersion = Get-Random -Minimum 10000 -maximum 99999
+        $Rules.SetAttribute("version","$RandomVersion")
+    }
     $Emie = $XmlDoc.CreateElement("","emie","")
     $Rules.AppendChild($Emie) | Out-Null
     $DocMode = $XmlDoc.CreateElement("","docMode","")
