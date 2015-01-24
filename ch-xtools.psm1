@@ -114,21 +114,6 @@ function Get-EnterpriseModeSiteList {
 Set-Alias gemsl Get-EnterpriseModeSiteList
 Export-ModuleMember -Function Get-EnterpriseModeSiteList -Alias gemsl
 
-function Test-XML {
-    # Checks XML file against Schema (.xsd file)
-    param ([Parameter(ValueFromPipeline=$true, Mandatory=$true)][string]$XmlFile,
-           [Parameter(Mandatory=$true)][string]$SchemaFile,
-           [scriptblock]$ValidationEventHandler={Write-Error $args[1].Exception})
-    $xml = New-Object System.Xml.XmlDocument
-    $schemaReader = New-Object System.Xml.XmlTextReader $SchemaFile
-    $schema = [System.Xml.Schema.XmlSchema]::Read($schemaReader, $ValidationEventHandler)
-    $xml.Schemas.Add($schema) | Out-Null
-    $xml.Load($XmlFile)
-    $xml.Validate($ValidationEventHandler)
-}
-
-Export-ModuleMember -Function Test-XML
-
 function Convert-CSVToEnterpriseModeSiteList {
     Param([Parameter(Mandatory=$true,Position=0)][string]$CSVPath,
           [Parameter(Position=1)][switch]$EmieFile)
