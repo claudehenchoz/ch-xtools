@@ -131,8 +131,7 @@ Export-ModuleMember -Function Test-XML
 
 function Convert-CSVToEnterpriseModeSiteList {
     Param([Parameter(Mandatory=$true,Position=0)][string]$CSVPath,
-          [Parameter(Mandatory=$false,Position=1)][string]$OutPath,
-          [Parameter(Mandatory=$false,Position=2)][string]$XSDPath)
+          [Parameter(Position=1)][switch]$EmieFile)
     # The sort by URL in this line ensures domains are always before URLs with path
     $CSVData = Import-Csv $CSVPath | Sort-Object -Property Url
     [xml]$XmlDoc = "<rules />"
@@ -159,14 +158,23 @@ function Convert-CSVToEnterpriseModeSiteList {
                     # We set the domain to exclude as it wasn't 
                     # explicitly specified
                     $Domain.SetAttribute("exclude","true")
+                    if ($EmieFile -and $Configuration.Comment) {
+                        $Domain.SetAttribute("comment",$Configuration.Comment)
+                    }
                 } else {
                     # We enable emie as the URL contains only a domain
                     $Domain.SetAttribute("exclude","false")
+                    if ($EmieFile -and $Configuration.Comment) {
+                        $Domain.SetAttribute("comment",$Configuration.Comment)
+                    }
                 }
             }
             if ($ConfigUri.Segments.Count -gt 1) {
                 $Path = $XmlDoc.CreateElement("path")
                 $Path.SetAttribute("exclude","false")
+                if ($EmieFile -and $Configuration.Comment) {
+                    $Path.SetAttribute("comment",$Configuration.Comment)
+                }
                 $Text = $XmlDoc.CreateTextNode($PathAndQuery)
                 $Path.AppendChild($Text) | Out-Null
                 $Domain.AppendChild($Path) | Out-Null
@@ -186,14 +194,23 @@ function Convert-CSVToEnterpriseModeSiteList {
                 if ($ConfigUri.Segments.Count -gt 1) {
                     # We don't configure the domain as it wasn't 
                     # explicitly specified
+                    if ($EmieFile -and $Configuration.Comment) {
+                        $Domain.SetAttribute("comment",$Configuration.Comment)
+                    }
                 } else {
                     # We configure the domain as the URL contains only a domain
                     $Domain.SetAttribute("docMode",$DocLevel)
+                    if ($EmieFile -and $Configuration.Comment) {
+                        $Domain.SetAttribute("comment",$Configuration.Comment)
+                    }
                 }
             }
             if ($ConfigUri.Segments.Count -gt 1) {
                 $Path = $XmlDoc.CreateElement("path")
                 $Path.SetAttribute("docMode",$DocLevel)
+                if ($EmieFile -and $Configuration.Comment) {
+                    $Path.SetAttribute("comment",$Configuration.Comment)
+                }
                 $Text = $XmlDoc.CreateTextNode($PathAndQuery)
                 $Path.AppendChild($Text) | Out-Null
                 $Domain.AppendChild($Path) | Out-Null
